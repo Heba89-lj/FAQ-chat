@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>المساعد الذكي - النيابة العامة</title>
+  <style>
+    body {
+      font-family: Cairo, sans-serif;
+      background: #e9edf3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .chat-container {
+      width: 400px;
+      height: 600px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,.1);
+    }
+
+    .chat-header {
+      background: #0d6efd;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f7f9fc;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .user {
+      background: #d1e7dd;
+      align-self: flex-end;
+    }
+
+    .bot {
+      background: #e2e3e5;
+      align-self: flex-start;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+
+    .chat-input input {
+      flex: 1;
+      border: none;
+      padding: 15px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .chat-input button {
+      background: #0d6efd;
+      color: white;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">وحدة المساعد الذكي</div>
+
+  <div class="chat-body" id="chatBody">
+    <div class="message bot">👋 أهلاً بيك، اسألني عن إجراءات الفحص.</div>
+  </div>
+
+  <div class="chat-input">
+    <input id="q" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter') send()">
+    <button onclick="send()">إرسال</button>
+  </div>
+</div>
+
+<script>
+  async function send() {
+    const input = document.getElementById("q");
+    const chatBody = document.getElementById("chatBody");
+    const question = input.value.trim();
+
+    if (!question) return;
+
+    // رسالة المستخدم
+    const userMsg = document.createElement("div");
+    userMsg.className = "message user";
+    userMsg.innerText = question;
+    chatBody.appendChild(userMsg);
+
+    input.value = "";
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    // رسالة مؤقتة للبوت
+    const botMsg = document.createElement("div");
+    botMsg.className = "message bot";
+    botMsg.innerText = "⏳ جارٍ البحث...";
+    chatBody.appendChild(botMsg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    try {
+      const res = await fetch("/api/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await res.json();
+      botMsg.innerText = data.answer || "لا توجد إجابة حالياً";
+
+    } catch {
+      botMsg.innerText = "❌ حدث خطأ، حاول لاحقاً";
+    }
+
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
